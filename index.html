@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        #question-container {
+            background-color: #fff;
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 600px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            font-size: 20px;
+        }
+
+        .question-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .question-text {
+            flex: 1;
+        }
+
+        .question-result {
+            flex-shrink: 0;
+            margin-left: 10px;
+            font-weight: bold;
+        }
+
+        #answer-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        #answer-form {
+            display: inline-block;
+        }
+
+        #answer-input {
+            padding: 10px;
+            margin-right: 10px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+
+        #submit-button {
+            padding: 10px 20px;
+            border: none;
+            background-color: #007bff;
+            color: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #submit-button:hover {
+            background-color: #0056b3;
+        }
+
+        #result-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        #result-container ul {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+
+        #result-container li {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            font-size: 16px;
+            padding-top: 15px;
+            padding-bottom: 15px;
+            border-bottom: 2px black solid;
+        }
+
+
+        #result-container .info {
+            width: calc(33.33% - 10px);
+            /* 1/3 씩 차지하도록 설정 */
+            margin-right: 10px;
+            /* 각 정보 사이의 간격 설정 */
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>헷갈리는 Javascript 문법</h1>
+
+    <div id="question-container">
+        <p>현재 점수: </p>
+    </div>
+    <div id="answer-container">
+        <form id="answer-form">
+            <input type="text" id="answer-input" placeholder="Enter your answer">
+            <button type="submit" id="submit-button">Submit</button>
+        </form>
+    </div>
+    <div id="result-container" style="margin-bottom: 500px;"></div>
+
+    <script>
+        // 문제 및 정답 설정
+        const questions = [
+          { question: "1. 3 + '2'", answer: "32" },
+          { question: "2. 3 - '2'", answer: "1" },
+          { question: "3. '3' - 2", answer: "1" },
+          { question: "4. 3 + 2 + 'px'", answer: "5px" },
+          { question: "5. 'px' + 3 + 2", answer: "px32" },
+          { question: "6. 3 + 'px' + 2", answer: "3px2" },
+          { question: "7. '4' + 2 * 5", answer: "410" },
+          { question: "8. 4 + 2 * '5'", answer: "14" },
+          { question: "9. '4' - '2'", answer: "2" },
+          { question: "10. '4' - 2", answer: "2" },
+          { question: "11. [] + []", answer: "" },
+          { question: "12. [] - []", answer: "0" },
+          { question: "13. [] == []", answer: "false" },
+          { question: "14. [] == ![]", answer: "true" },
+          { question: "15. [1,2,3] == [1,2,3]", answer: "false" },
+          { question: "16. 0 == '0'", answer: "true" },
+          { question: "17. 0 === '0'", answer: "false" },
+          { question: "18. NaN == NaN", answer: "false" },
+          { question: "19. NaN === NaN", answer: "false" },
+          { question: "20. typeof NaN", answer: "number" },
+          { question: "21. typeof null", answer: "object" },
+          { question: "22. typeof undefined", answer: "undefined" },
+          { question: "23. typeof []", answer: "object" },
+          { question: "24. typeof {}", answer: "object" },
+          { question: "25. typeof function(){}", answer: "function" },
+          { question: "26. 4 + 2 / '5'?", answer: "4.4" },
+          { question: "27. '4' - 2 / '5'?", answer: "3.6" },
+          { question: "28. {} + {}?", answer: "[object object][object object]" },
+          { question: "29. {} - {}?", answer: "nan" },
+          { question: "30. {'a': 1, 'b': 2} + {'c': 3, 'd': 4}?", answer: "[object object][object object]" }
+        ];
+
+        // const questions = [
+        //     { question: "1. 3 + '2'", answer: "32" },
+        //     { question: "2. 3 - '2'", answer: "1" },
+        //     { question: "3. '3' - 2", answer: "1" },
+        //     { question: "4. 3 + 2 + 'px'", answer: "5px" },
+        // ];
+
+        const my_answer = []
+        const correct_list = []
+
+
+        const totalQuestions = questions.length;
+        let currentQuestionIndex = 0;
+        let score = 0;
+
+        // 문제 표시 함수
+        function displayQuestion() {
+            const questionContainer = document.querySelector("#question-container");
+            const nextQuestion = document.createElement("div");
+            nextQuestion.classList.add("question-wrapper");
+            nextQuestion.innerHTML = `
+                <div class="question-text">${questions[currentQuestionIndex].question}</div>
+                <div class="question-result"></div>
+            `;
+            nextQuestion.style.paddingBottom = "10px";
+            nextQuestion.style.borderBottom = "1px solid #ccc";
+
+            questionContainer.appendChild(nextQuestion);
+
+            const scoreConatiner = document.querySelector("#question-container > p")
+            scoreConatiner.innerHTML = `<p>현재 점수: ${score}점</p>`
+        }
+
+        // 정답 확인 함수
+        function checkAnswer(answer) {
+            console.log("내 제출 : ", answer.trim().toLowerCase(), " / ", "정답 : ", questions[currentQuestionIndex].answer)
+            return answer.trim().toLowerCase() === questions[currentQuestionIndex].answer;
+        }
+
+        // 결과 표시 함수
+        function displayResult(isCorrect) {
+            const questionContainer = document.querySelector("#question-container");
+            const questionResult = questionContainer.querySelectorAll(".question-result")[currentQuestionIndex];
+            if (isCorrect) score++;
+            const resultMessage = isCorrect ? "정답!" : "오답!";
+            questionResult.textContent = resultMessage;
+        }
+
+        // 최종 점수 및 정답 표시 함수
+        function displayScoreAndAnswers() {
+            const scoreConatiner = document.querySelector("#question-container > p")
+            scoreConatiner.innerHTML = `<p>현재 점수: ${score}점</p>`
+
+            const resultContainer = document.querySelector("#result-container");
+            resultContainer.innerHTML = `<h2>Final Score: ${score}/${totalQuestions}</h2>`;
+            const answersList = document.createElement("ul");
+            questions.forEach((question, index) => {
+                const isCorrectQuestion = correct_list[index];
+                const listItem = document.createElement("li");
+                const questionElement = document.createElement("div");
+                questionElement.classList.add("info");
+                questionElement.textContent = "문제 : " + question.question;
+                const answerElement = document.createElement("div");
+                answerElement.classList.add("info");
+                answerElement.textContent = `정답: ${question.answer}`;
+                const userAnswerElement = document.createElement("div");
+                userAnswerElement.classList.add("info");
+                const userAnswer = my_answer[index] || "Not answered";
+                userAnswerElement.textContent = `내가 제출한 답안: ${userAnswer}`;
+
+                // 정답인 경우 텍스트 색상을 초록색으로, 오답인 경우 빨간색으로 설정
+                if (isCorrectQuestion === 1) {
+                    listItem.style.color = "green";
+                } else if (isCorrectQuestion === 0) {
+                    listItem.style.color = "red";
+                }
+
+
+                listItem.appendChild(questionElement);
+                listItem.appendChild(answerElement);
+                listItem.appendChild(userAnswerElement);
+                answersList.appendChild(listItem);
+            });
+
+            resultContainer.appendChild(answersList);
+        }
+
+        // 다음 문제로 이동 함수
+        function moveToNextQuestion() {
+            const questionContainer = document.querySelector("#question-container");
+            //   questionContainer.innerHTML = ""; // Clear previous question
+            currentQuestionIndex++;
+            if (currentQuestionIndex < totalQuestions) {
+                displayQuestion();
+            } else {
+                displayScoreAndAnswers();
+            }
+        }
+
+        // 폼 제출 이벤트 핸들러
+        document.querySelector("#answer-form").addEventListener("submit", function (event) {
+            event.preventDefault();
+            const answerInput = document.querySelector("#answer-input");
+            const userAnswer = answerInput.value;
+            const isCorrect = checkAnswer(userAnswer);
+            displayResult(isCorrect);
+            answerInput.value = "";
+            my_answer.push(userAnswer); // 사용자의 답안을 my_answer 배열에 추가
+            isCorrect ? correct_list.push(1) : correct_list.push(0)
+            moveToNextQuestion();
+        });
+
+
+        // 초기 문제 표시
+        displayQuestion();
+
+    </script>
+
+</body>
+
+</html>
